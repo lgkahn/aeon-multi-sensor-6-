@@ -34,7 +34,7 @@ Enter file contents here/**
 *
 * version 2.
  changed range of motion sensitivity to 0 -5 and location of setting. from 6 to 4. 
- also added checking of input valukes
+ also added checking of input values
  also added parameters for humidity change amount and illumination change amount to trigger report. Also fixed the size passed into these
  ... was passing as 1 .. size is actually 2.
  Also, set wakeup when on battery - parameter 2.
