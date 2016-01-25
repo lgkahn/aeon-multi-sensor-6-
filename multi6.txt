@@ -104,7 +104,7 @@ metadata {
 		//		title: "Advanced Configuration", displayDuringSetup: true, type: "paragraph", element: "paragraph"
 		input "motionDelayTime", "enum", title: "Motion Sensor Delay Time?",
 				options: ["20 seconds", "30 seconds", "1 minute", "2 minutes", "3 minutes", "4 minutes"], defaultValue: "1 minute", displayDuringSetup: true
-		input "motionSensitivity", "number", title: "Motion Sensor Sensitivity? (0 = min., 127 = max., 64 = normal)", range: "0..127", defaultValue: 64, displayDuringSetup: true
+		input "motionSensitivity", "number", title: "Motion Sensor Sensitivity? (0 = off, 1 = min., 3 = normal, 5 = max.)", range: "0..5", defaultValue: 3, displayDuringSetup: true
 		input "reportInterval", "enum", title: "Sensors Report Interval?",
 				options: ["20 seconds", "30 seconds", "1 minute", "2 minutes", "3 minutes", "4 minutes", "5 minutes", "10 minutes", "15 minutes", "30 minutes", "1 hour", "6 hours", "12 hours", "18 hours", "24 hours"], defaultValue: "5 minutes", displayDuringSetup: true
  		input("TempOffset", "number", title: "Temperature Offset/Adjustment -10 to +10 in Degrees?",range: "-10..10", description: "If your temperature is innacurate this will offset/adjust it by this many degrees.", defaultValue: 0, required: false, displayDuringSetup: true)
@@ -232,7 +232,7 @@ if (settings.motionDelayTime == null)
 if (settings.reportInterval == null)
   settings.reportInterval = 8*60
 if (settings.motionSensitivity == null)
-  settings.motionSensitivity = 64
+  settings.motionSensitivity = 3
 if (settings.TempOffset == null)
   settings.TempOffset = 0
 if (settings.HumidOffset == null)
@@ -244,30 +244,55 @@ if (settings.tempScale == null)
 if (settings.tempChangeAmount == null)
   settings.tempChangeAmount = 2
   
-   
   if (settings.motionSensitivity < 0)
     {
       log.debug "Illegal motion sensitivity ... resetting to 0!"
       settings.motionSensitivity = 0
     }
     
-   if (settings.motionSensitivity > 127)
+   if (settings.motionSensitivity > 5)
     {
-      log.debug "Illegal motion sensitivity ... resetting to 127!"
-      settings.motionSensitivity = 127
+      log.debug "Illegal motion sensitivity ... resetting to 5!"
+      settings.motionSensitivity = 5
+    }
+    
+   // fix tz offset
+ if (settings.tzOffset < -12)
+  {
+    settings.tzOffset = -12
+    log.debug "Timezone too low... resetting to -12"
+    }
+    
+ if (settings.tzOffset > 14)
+  {
+    settings.tzOffset = 14
+    log.debug "Timezone too high ... resetting to 14"
     }
     
      // fix temp offset
- if (settings.TempOffset < -12)
+ if (settings.TempOffset < -10)
   {
-    settings.TempOffset = -12
-    log.debug "Temperature Offset too low... resetting to -12"
+    settings.TempOffset = -10
+    log.debug "Temperature Offset too low... resetting to -10"
     }
     
- if (settings.TempOffset > 14)
+ if (settings.TempOffset > 10)
   {
-    settings.TempOffset = 14
-    log.debug "Temperature Adjusment too high ... resetting to 14"
+    settings.TempOffset = 10
+    log.debug "Temperature Adjusment too high ... resetting to 10"
+    }
+
+     // fix temp offset
+ if (settings.HumidOffset < -10)
+  {
+    settings.HumidOffset = -10
+    log.debug "Humidity Offset too low... resetting to -10"
+    }
+    
+ if (settings.HumidOffset > 10)
+  {
+    settings.HumidOffset = 10
+    log.debug "Humidity Adjusment too high ... resetting to 10"
     }
 
 	if (device.latestValue("powerSupply") == "USB Cable") {  //case1: USB powered
@@ -342,6 +367,8 @@ def zwaveEvent(physicalgraph.zwave.commands.securityv1.NetworkKeyVerify cmd) {
 }
 
 def zwaveEvent(physicalgraph.zwave.commands.manufacturerspecificv2.ManufacturerSpecificReport cmd) {
+ log.debug "in manuf specific cmd = $cmd"
+ 
 	log.info "Executing zwaveEvent 72 (ManufacturerSpecificV2) : 05 (ManufacturerSpecificReport) with cmd: $cmd"
 	log.debug "manufacturerId:   ${cmd.manufacturerId}"
 	log.debug "manufacturerName: ${cmd.manufacturerName}"
@@ -371,7 +398,7 @@ def zwaveEvent(physicalgraph.zwave.commands.batteryv1.BatteryReport cmd) {
 
 def zwaveEvent(physicalgraph.zwave.commands.sensormultilevelv5.SensorMultilevelReport cmd){
 log.debug "\nin multi level report cmd = $cmd\n"
-
+ 
 	def map = [:]
 	switch (cmd.sensorType) {
 		case 1:
@@ -512,7 +539,7 @@ if (settings.motionDelayTime == null)
 if (settings.reportInterval == null)
   settings.reportInterval = 8*60
 if (settings.motionSensitivity == null)
-  settings.motionSensitivity = 64
+  settings.motionSensitivity = 3
 if (settings.TempOffset == null)
   settings.TempOffset = 0
 if (settings.HumidOffset == null)
@@ -530,11 +557,51 @@ if (settings.TempChangeAmount == null)
       settings.motionSensitivity = 0
     }
     
-   if (settings.motionSensitivity > 127)
+   if (settings.motionSensitivity > 5)
     {
-      log.debug "Illegal motion sensitivity ... resetting to 127!"
-      settings.motionSensitivity = 127
+      log.debug "Illegal motion sensitivity ... resetting to 5!"
+      settings.motionSensitivity = 5
     }
+    
+   // fix tz offset
+ if (settings.tzOffset < -12)
+  {
+    settings.tzOffset = -12
+    log.debug "Timezone too low... resetting to -12"
+    }
+    
+ if (settings.tzOffset > 14)
+  {
+    settings.tzOffset = 14
+    log.debug "Timezone too high ... resetting to 14"
+    }
+    
+     // fix temp offset
+ if (settings.TempOffset < -10)
+  {
+    settings.TempOffset = -10
+    log.debug "Temperature Offset too low... resetting to -10"
+    }
+    
+ if (settings.TempOffset > 10)
+  {
+    settings.TempOffset = 10
+    log.debug "Temperature Adjusment too high ... resetting to 10"
+    }
+
+     // fix temp offset
+ if (settings.HumidOffset < -10)
+  {
+    settings.HumidOffset = -10
+    log.debug "Humidity Offset too low... resetting to -10"
+    }
+    
+ if (settings.HumidOffset > 10)
+  {
+    settings.HumidOffset = 10
+    log.debug "Humidity Adjusment too high ... resetting to 10"
+    }
+
   
 log.debug "In configure report interval value = $reportInterval"
 log.debug "Motion Delay Time = $motionDelayTime"
@@ -583,7 +650,7 @@ def request = [
 
 	//4. afSensitivity 3 levels: 64-normal (default), 127-maximum, 0-minimum
     zwave.configurationV1.configurationSet(parameterNumber: 6, size: 1, scaledConfigurationValue: motionSensitivity),
-    
+     
 	//5. report every x minutes (threshold reports don't work on battery power, default 8 mins)
  	zwave.configurationV1.configurationSet(parameterNumber: 111, size: 4, scaledConfigurationValue:  timeOptionValueMap[reportInterval]), //association group 1
     zwave.configurationV1.configurationGet(parameterNumber: 0x6F),
@@ -630,17 +697,17 @@ def refresh() {
 	// This sensor joins as a secure device if you double-click the button to include it
 	log.debug "in refresh"
 
-	//7. query sensor data
-   
-delayBetween([
-		zwave.batteryV1.batteryGet().format(),
+ 	delayBetween([
+		zwave.versionV1.versionGet(),
+        zwave.firmwareUpdateMdV2.firmwareMdGet(),
+        zwave.configurationV1.configurationGet(parameterNumber: 6),
+        zwave.batteryV1.batteryGet().format(),
         zwave.sensorBinaryV2.sensorBinaryGet(), //motion
 		zwave.sensorMultilevelV5.sensorMultilevelGet(sensorType: 1), //temperature
 	    zwave.sensorMultilevelV5.sensorMultilevelGet(sensorType: 3), //illuminance
 		zwave.sensorMultilevelV5.sensorMultilevelGet(sensorType: 5), //humidity
 		zwave.sensorMultilevelV5.sensorMultilevelGet(sensorType: 27) //ultravioletIndex
-	],1000)
-	
+ 	], 1000)
 }
 
 private def getTimeOptionValueMap() { [
@@ -684,11 +751,13 @@ private commands(commands, delay=1000) {
 
 
 def zwaveEvent(physicalgraph.zwave.commands.versionv1.VersionCommandClassReport cmd) {
+   log.debug "in version class report"
 	//if (state.debug) 
     log.debug "---COMMAND CLASS VERSION REPORT V1--- ${device.displayName} has command class version: ${cmd.commandClassVersion} - payload: ${cmd.payload}"
 }
 
 def zwaveEvent(physicalgraph.zwave.commands.versionv1.VersionReport cmd) {
+    log.debug "in version report"
 	def fw = "${cmd.applicationVersion}.${cmd.applicationSubVersion}"
 	updateDataValue("fw", fw)
 	//if (state.debug) 
